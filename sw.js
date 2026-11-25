@@ -1,5 +1,5 @@
 // Offline cache: app shell first from network, falls back to cache when offline.
-const CACHE = 'hybrid-training-v1';
+const CACHE = 'hybrid-training-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

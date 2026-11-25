@@ -128,7 +128,44 @@ details.ses li span{color:var(--mut);text-align:right;font-variant-numeric:tabul
 .fg label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--mut)}
 .fg input,.fg select{min-height:46px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:16px Archivo,sans-serif;padding:0 10px}
 .fa{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.fa .sp{flex:1}
-@media(prefers-reduced-motion:no-preference){.ring circle.p{transition:stroke-dashoffset .5s ease}}
+/* progress & records */
+.exl{color:inherit;text-decoration:none;display:inline-block;padding:11px 0;margin:-11px 0}
+.exl::after{content:"›";margin-left:6px;color:var(--mut);font-weight:600}
+.set.pr .no{color:var(--acc);font-size:12px;font-weight:800}
+.up+.up{margin-left:6px}
+.up.pr{background:var(--acc);color:#fff}
+.back{border:0;background:none;color:var(--mut);font:600 15px Archivo,sans-serif;min-height:44px;padding:0;margin-top:6px;cursor:pointer}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--card);border-radius:12px;padding:4px;margin-top:16px}
+.seg button{border:0;background:none;color:var(--mut);font:600 15px Archivo,sans-serif;min-height:40px;padding:0 14px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--bg);color:var(--ink)}
+.chart{position:relative;background:var(--card);border-radius:16px;padding:14px 14px 8px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font:12px Archivo,sans-serif;fill:var(--mut);font-variant-numeric:tabular-nums}
+.chart text.v{font-weight:700;font-size:14px;fill:var(--ink)}
+.chart .tip{position:absolute;top:10px;pointer-events:none;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.4;white-space:nowrap;box-shadow:0 6px 18px rgb(0 0 0/.14);display:none}
+.chart .tip b{display:block;font-size:17px;font-weight:800;font-stretch:112%}
+.chart .tip span{display:block;color:var(--mut)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:8px 2px 0;font-size:13px;color:var(--mut)}
+.key i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.key .f{background:var(--acc)}.key .h{border:2px solid var(--acc)}
+.rows{list-style:none;margin:0;padding:0;background:var(--card);border-radius:16px}
+.rows li{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:52px}
+.rows li+li{border-top:1px solid var(--line)}
+.rows li.ln{padding:0}
+.rows a{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:60px;flex:1;color:inherit;text-decoration:none}
+.rows .nm{flex:1;display:flex;flex-direction:column;line-height:1.3}
+.rows .nm small{color:var(--mut);font-size:14px}
+.rows .val{color:var(--mut);font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
+.rows .chev{color:var(--mut);font-size:22px;line-height:1}
+.chip{flex:none;background:var(--acc);color:#fff;font:800 11px Archivo,sans-serif;letter-spacing:.03em;border-radius:6px;padding:3px 6px}
+.spark{flex:none}
+.stats.s2{grid-template-columns:repeat(2,minmax(0,1fr))}.stats.s3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stats.s2 b,.stats.s3 b{font-size:28px}.stats b small{font-size:15px;font-weight:700;font-stretch:100%}
+.morebtn{margin-top:8px;width:100%}
+#toast{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));z-index:20;transform:translate(-50%,-160%);width:max-content;max-width:calc(100% - 32px);background:var(--acc);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;line-height:1.35;box-shadow:0 10px 28px rgb(0 0 0/.28)}
+#toast b{display:block;font-size:18px;font-weight:800;font-stretch:112%}
+#toast.on{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:no-preference){.ring circle.p{transition:stroke-dashoffset .5s ease}#toast{transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}}
 @media(max-width:420px){.set{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 48px;gap:6px}.chk{width:48px}.hero{grid-template-columns:minmax(0,1fr) 88px}.ring{width:88px;height:88px}.grid{grid-template-columns:54px repeat(7,minmax(0,1fr))}}
 </style>
 </head>
@@ -142,6 +179,7 @@ details.ses li span{color:var(--mut);text-align:right;font-variant-numeric:tabul
   <main id="main"></main>
 </div>
 <div id="bar"><div class="in"><div class="t" id="barT"><small>Pause</small>0:00</div><button class="btn" id="bPlus" type="button">+15 s</button><button class="btn" id="bSkip" type="button">Weiter</button></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <div class="sheet" id="sheet"><form id="form" autocomplete="off">
   <h2 id="fTitle">Übung</h2>
   <div class="fg">
@@ -206,7 +244,7 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 
 let plan=lsGet('tr-plan')||clone(DEF),sess=lsGet('tr-sess')||{},edit=false,needs=false,editing=null;
 if(!plan.days||plan.days.length!==7)plan=clone(DEF);
-const route=()=>{const h=location.hash.slice(1);return h==='verlauf'?{v:'hist'}:h==='mehr'?{v:'more'}:{v:'day',d:DAYS.includes(h)?h:DAYS[dayIdx(new Date())]}};
+const route=()=>{const h=location.hash.slice(1);return h==='verlauf'?{v:'hist'}:h==='mehr'?{v:'more'}:h.startsWith('x-')?{v:'ex',id:h.slice(2)}:{v:'day',d:DAYS.includes(h)?h:DAYS[dayIdx(new Date())]}};
 const SC_NAME='Training loggen';
 const HTYPE={kraft:'Krafttraining',athletik:'Functional Training',cardio:'Laufen'};
 const getDay=id=>plan.days.find(d=>d.id===id);
@@ -224,17 +262,159 @@ function lastFor(exId){
   const list=Object.values(sess).filter(s=>s.date<cutoff&&s.sets&&s.sets[exId]&&s.sets[exId].some(x=>x&&x.ok)).sort((a,b)=>b.date<a.date?-1:1);
   return list[0]?list[0].sets[exId]:null;
 }
-const fmtSets=(arr,ex)=>{const ok=arr.filter(x=>x&&x.ok);if(!ok.length)return'';const v=ex.unit==='check'?ok.length+' ✓':ok.map(x=>x.v||'–').join(' · ')+(ex.unit==='reps'?'':' '+UNIT[ex.unit]);const ws=ok.map(x=>x.w).filter(Boolean);return v+(ws.length&&ex.load?' @ '+[...new Set(ws)].join('/')+' '+ex.load:'')};
+const fmtSets=(arr,ex)=>{const ok=arr.filter(x=>x&&x.ok);if(!ok.length)return'';const v=ex.unit==='check'?ok.length+' ✓':ok.map(x=>x.v||'–').join(' · ')+(ex.unit==='reps'?'':' '+UNIT[ex.unit]);const ws=ok.map(x=>x.w).filter(Boolean);return v+(ws.length&&ex.load?' @ '+[...new Set(ws)].map(w=>String(w).replace('.',',')).join('/')+' '+ex.load:'')};
 const target=ex=>ex.unit==='check'?ex.sets+' ×':ex.sets+' × '+(ex.min===ex.max?ex.min:ex.min+'–'+ex.max)+' '+UNIT[ex.unit]+(ex.per?' '+ex.per:'');
 const totals=d=>{let t=0,o=0;const s=cur(d.id);d.blocks.forEach(b=>b.ex.forEach(ex=>{t+=+ex.sets;const a=s&&s.sets[ex.id];if(a)o+=a.slice(0,ex.sets).filter(x=>x&&x.ok).length}));return{t,o}};
 const weekDone=id=>{const m=ds(monday());return Object.values(sess).some(s=>s.day===id&&s.date>=m&&((s.sets&&Object.values(s.sets).some(a=>a.some(x=>x&&x.ok)))||(s.week&&Object.keys(s.week).length)))};
 
+/* progress & records */
+let PR=new Map(),CH=null,exM={},allEx=false,prevHash=null,toastT=null,rzT=null;const pos={};
+const num=v=>{const n=parseFloat(String(v??'').replace(',','.'));return isFinite(n)?n:0};
+const fmtN=n=>String(Math.round(n*100)/100).replace('.',',');
+const okSets=a=>(a||[]).filter(x=>x&&x.ok);
+const dshort=d=>{const t=new Date(d+'T12:00:00');return t.getDate()+'.'+(t.getMonth()+1)+'.'};
+const dfmt=d=>DN[DAYS[dayIdx(new Date(d+'T12:00:00'))]]+' '+dshort(d);
+/* which sets can be a record: reps/sec, with or without kg; minutes and check-only never */
+const prKind=ex=>ex.unit==='reps'||ex.unit==='sec'?(ex.load==='kg'?'wv':'v'):null;
+function exDef(id){
+  for(const d of plan.days)for(const b of d.blocks)for(const ex of b.ex)if(ex.id===id)return ex;
+  const s=Object.values(sess).find(s=>s.sets&&s.sets[id]);
+  return E(id,(s&&s.n&&s.n[id])||id,'core',3,0,0,{load:s&&okSets(s.sets[id]).some(x=>x.w)?'kg':''});
+}
+const tFirst=s=>Math.min(Infinity,...Object.values(s.sets||{}).flat().filter(x=>x&&x.t).map(x=>x.t));
+const exHist=id=>Object.values(sess).filter(s=>s.sets&&okSets(s.sets[id]).length).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(tFirst(a)-tFirst(b))||0);
+/* A set is a record when no earlier set beats or ties it on both weight and reps.
+   The first session of an exercise is the baseline and never counts. */
+function prScan(id){
+  const ex=exDef(id),k=prKind(ex),marks=new Map();let front=[],count=0;
+  if(!k)return{marks,front,count};
+  const beaten=p=>front.some(q=>q.w>=p.w&&q.v>=p.v);
+  exHist(id).forEach(s=>{
+    const base=front.length>0,fl=[];
+    s.sets[id].forEach((x,i)=>{
+      if(!x||!x.ok)return;const p={w:k==='wv'?num(x.w):0,v:num(x.v),date:s.date};if(p.v<=0)return;
+      if(beaten(p))return;
+      if(base){fl[i]=k==='wv'&&p.w>0&&front.every(q=>q.w<p.w)?'w':'v';count++}
+      front=front.filter(q=>!(p.w>=q.w&&p.v>=q.v)).concat([p]);
+    });
+    if(fl.length)marks.set(s,fl);
+  });
+  return{marks,front,count};
+}
+function computePRs(){
+  PR=new Map();const ids=new Set();
+  Object.values(sess).forEach(s=>s.sets&&Object.keys(s.sets).forEach(id=>ids.add(id)));
+  ids.forEach(id=>prScan(id).marks.forEach((fl,s)=>{if(!PR.has(s))PR.set(s,{});PR.get(s)[id]=fl}));
+}
+const prOf=(s,id)=>(s&&PR.get(s)&&PR.get(s)[id])||[];
+const prCount=s=>{const o=PR.get(s);return o?Object.values(o).reduce((a,f)=>a+f.filter(Boolean).length,0):0};
+const prText=(ex,x)=>{const v=fmtN(num(x.v))+' '+UNIT[ex.unit],w=num(x.w);return w>0?fmtN(w)+' kg × '+v:v};
+function toast(title,line){
+  const t=$('#toast'),b=document.createElement('b');b.textContent=title;t.replaceChildren(b,document.createTextNode(line));
+  t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3800);
+}
+function metrics(ex,id){
+  if(ex.unit==='check')return[];
+  const U=UNIT[ex.unit],ms=[],hasW=!!ex.load&&exHist(id).some(s=>okSets(s.sets[id]).some(x=>num(x.w)>0));
+  if(hasW)ms.push({k:'w',label:ex.load==='km'?'Strecke':'Gewicht',unit:ex.load});
+  else if(ex.unit!=='min')ms.push({k:'best',label:ex.unit==='sec'?'Längster Satz':'Bester Satz',unit:U});
+  ms.push({k:'sum',label:ex.unit==='reps'?'Wdh gesamt':ex.unit==='sec'?'Sekunden gesamt':'Minuten',unit:U});
+  return ms;
+}
+const series=(id,k)=>exHist(id).map(s=>{const a=okSets(s.sets[id]);return{s,date:s.date,y:k==='w'?Math.max(0,...a.map(x=>num(x.w))):k==='best'?Math.max(0,...a.map(x=>num(x.v))):a.reduce((t,x)=>t+num(x.v),0)}});
+function ticks(lo,hi,minStep){
+  const s0=(hi-lo)/4,mag=10**Math.floor(Math.log10(s0)),st=Math.max(minStep,[1,2,2.5,5,10].find(f=>f*mag>=s0)*mag),t=[];
+  for(let v=Math.floor(lo/st)*st;v<=Math.ceil(hi/st)*st+st/2;v+=st)t.push(Math.round(v*1e6)/1e6);
+  return t;
+}
+function chartSvg(ex,pts,m,marks){
+  const W=Math.max(260,Math.round(($('#main').clientWidth||600)-28)),H=210,pl=40,pr=16,pt=28,pb=26;
+  const ys=pts.map(p=>p.y);let lo=Math.min(...ys),hi=Math.max(...ys);
+  if(lo===hi){const d=m.k==='w'?(ex.load==='km'?1:2.5):Math.max(1,Math.round(hi*.1));lo=Math.max(0,lo-d);hi+=d}
+  const tk=ticks(lo,hi,m.k==='w'?0:1);lo=tk[0];hi=tk[tk.length-1];
+  const ts=pts.map(p=>new Date(p.date+'T12:00:00').getTime()),a=Math.min(...ts),z=Math.max(...ts);
+  const X=t=>z===a?(pl+W-pr)/2:pl+(t-a)/(z-a)*(W-pl-pr),Y=v=>pt+(hi-v)/(hi-lo)*(H-pt-pb);
+  const P=pts.map((p,i)=>({x:+X(ts[i]).toFixed(1),y:+Y(p.y).toFixed(1),p,pr:marks.has(p.s)}));
+  let g=tk.map(t=>{const y=Y(t).toFixed(1);return `<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${pl-8}" y="${(+y+4).toFixed(1)}" text-anchor="end">${fmtN(t)}</text>`}).join('');
+  g+=`<text x="${pl}" y="${H-4}">${dshort(pts[0].date)}</text><text x="${W-pr}" y="${H-4}" text-anchor="end">${dshort(pts[pts.length-1].date)}</text>`;
+  g+=`<line class="xh" y1="${pt-8}" y2="${H-pb}" stroke="var(--mut)" stroke-width="1" style="display:none"/>`;
+  g+=`<path d="${P.map((q,i)=>(i?'L':'M')+q.x+' '+q.y).join('')}" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const many=P.length>40;
+  g+=P.map((q,i)=>many&&!q.pr&&i<P.length-1?'':q.pr?`<circle cx="${q.x}" cy="${q.y}" r="5" fill="var(--acc)" stroke="var(--card)" stroke-width="2"/>`:`<circle cx="${q.x}" cy="${q.y}" r="4" fill="var(--card)" stroke="var(--acc)" stroke-width="2"/>`).join('');
+  const L=P[P.length-1],mi=ys.lastIndexOf(Math.max(...ys)),M=P[mi];
+  const lab=(q,txt)=>`<text class="v" x="${q.x}" y="${(q.y-12).toFixed(1)}" text-anchor="${q.x>W-pr-44?'end':q.x<pl+44?'start':'middle'}">${esc(txt)}</text>`;
+  g+=lab(L,fmtN(L.p.y)+' '+m.unit);
+  if(mi!==P.length-1&&Math.abs(M.x-L.x)>80)g+=lab(M,fmtN(M.p.y));
+  g+=`<circle class="hl" r="8" fill="none" stroke="var(--ink)" stroke-width="2" style="display:none"/>`;
+  CH={W,pts:P.map(q=>({x:q.x,y:q.y,val:fmtN(q.p.y)+' '+m.unit,lines:[dfmt(q.p.date)+' · '+((getDay(q.p.s.day)||{}).name||''),fmtSets(q.p.s.sets[ex.id],ex),q.pr?'Rekord in dieser Einheit':''].filter(Boolean)}))};
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.label)}: ${pts.length} Einheiten, zuletzt ${esc(fmtN(L.p.y)+' '+m.unit)}">${g}</svg><div class="tip" aria-hidden="true"></div></div>`+
+    (prKind(ex)?'<p class="key"><span><i class="f"></i>Einheit mit Rekord</span><span><i class="h"></i>ohne Rekord</span></p>':'');
+}
+function bindChart(){
+  const c=$('#main .chart');if(!c||!CH)return;
+  const svg=c.querySelector('svg'),tip=c.querySelector('.tip'),xh=c.querySelector('.xh'),hl=c.querySelector('.hl');
+  const show=e=>{
+    const r=svg.getBoundingClientRect(),k=CH.W/r.width,x=(e.clientX-r.left)*k;
+    let p=CH.pts[0];CH.pts.forEach(q=>{if(Math.abs(q.x-x)<Math.abs(p.x-x))p=q});
+    xh.setAttribute('x1',p.x);xh.setAttribute('x2',p.x);xh.style.display='';hl.setAttribute('cx',p.x);hl.setAttribute('cy',p.y);hl.style.display='';
+    const b=document.createElement('b');b.textContent=p.val;tip.replaceChildren(b);
+    p.lines.forEach(l=>{const s=document.createElement('span');s.textContent=l;tip.append(s)});
+    tip.style.display='block';
+    const px=r.left-c.getBoundingClientRect().left+p.x/k,tw=tip.offsetWidth;
+    tip.style.left=Math.max(4,Math.min(c.clientWidth-tw-4,px>c.clientWidth/2?px-tw-16:px+16))+'px';
+  };
+  c.addEventListener('pointermove',show);c.addEventListener('pointerdown',show);
+  c.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){tip.style.display=xh.style.display=hl.style.display='none'}});
+}
+function spark(pts){
+  if(pts.length<2)return'<span class="spark" style="width:72px"></span>';
+  const W=72,H=28,ys=pts.map(p=>p.y),lo=Math.min(...ys),hi=Math.max(...ys),n=pts.length;
+  const P=pts.map((p,i)=>[2+i*(W-6)/(n-1),hi===lo?H/2:H-4-(p.y-lo)/(hi-lo)*(H-8)].map(v=>v.toFixed(1)));
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${P.map(q=>q.join(',')).join(' ')}" fill="none" stroke="var(--mut)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${P[n-1][0]}" cy="${P[n-1][1]}" r="3" fill="var(--acc)"/></svg>`;
+}
+function exList(){
+  const ids=[];
+  plan.days.forEach(d=>d.blocks.forEach(b=>b.ex.forEach(ex=>{if(!ids.includes(ex.id))ids.push(ex.id)})));
+  Object.values(sess).forEach(s=>s.sets&&Object.keys(s.sets).forEach(id=>{if(!ids.includes(id))ids.push(id)}));
+  const rows=ids.map(id=>({id,h:exHist(id)})).filter(o=>o.h.length)
+    .sort((a,b)=>{const x=a.h[a.h.length-1].date,y=b.h[b.h.length-1].date;return x<y?1:x>y?-1:0})
+    .map(({id,h})=>{const ex=exDef(id),ms=metrics(ex,id),pts=ms.length?series(id,ms[0].k).slice(-12):[];
+      return `<li class="ln"><a href="#x-${esc(id)}"><span class="nm"><b>${esc(ex.name)}</b><small>Zuletzt ${esc(fmtSets(h[h.length-1].sets[id],ex))}</small></span>${spark(pts)}<span class="chev" aria-hidden="true">›</span></a></li>`});
+  if(!rows.length)return'';
+  return `<section class="blk"><div class="bh"><h2>Übungen</h2><p>Antippen für Fortschritt</p></div><ul class="rows">${(allEx?rows:rows.slice(0,6)).join('')}</ul>${rows.length>6?`<button class="btn morebtn" data-a="exall" type="button">${allEx?'Weniger anzeigen':'Alle '+rows.length+' Übungen'}</button>`:''}</section>`;
+}
+function exDetail(id){
+  const ex=exDef(id),hist=exHist(id),scan=prScan(id),ms=metrics(ex,id),m=ms.find(x=>x.k===exM[id])||ms[0],k=prKind(ex),U=UNIT[ex.unit]||'';
+  let h=`<button class="back" data-a="back" type="button">‹ Zurück</button><div class="hero" style="grid-template-columns:1fr"><div><p class="k">Fortschritt${CATS[ex.cat]?' · '+CATS[ex.cat]:''}</p><h1>${esc(ex.name)}</h1><p class="m">${esc(target(ex))}${ex.eq?' · '+esc(ex.eq):''}</p></div></div>`;
+  if(!hist.length)return h+'<p class="empty">Noch kein Eintrag. Hake den ersten Satz dieser Übung ab, dann siehst du hier deinen Verlauf.</p>';
+  const all=hist.flatMap(s=>okSets(s.sets[id])),maxW=Math.max(0,...all.map(x=>num(x.w))),maxV=Math.max(0,...all.map(x=>num(x.v))),tiles=[];
+  if(ex.unit==='check')tiles.push([all.length,'','Sätze']);
+  else if(ex.unit==='min'){tiles.push([fmtN(all.reduce((a,x)=>a+num(x.v),0)),'min','Gesamt']);if(maxW>0)tiles.push([fmtN(maxW),ex.load,'Weiteste'])}
+  else if(maxW>0)tiles.push([fmtN(maxW),'kg','Höchstgewicht']);
+  else tiles.push([fmtN(maxV),U,'Bester Satz']);
+  tiles.push([hist.length,'','Einheiten']);
+  if(k)tiles.push([scan.count,'','Rekorde']);
+  h+=`<div class="stats s${tiles.length}">${tiles.map(([v,u,l])=>`<div><b>${esc(v)}${u?`<small> ${esc(u)}</small>`:''}</b><span>${l}</span></div>`).join('')}</div>`;
+  if(m){
+    if(ms.length>1)h+=`<div class="seg" role="group" aria-label="Kennzahl">${ms.map(x=>`<button type="button" data-a="metric" data-m="${x.k}" class="${x===m?'on':''}" aria-pressed="${x===m}">${x.label}</button>`).join('')}</div>`;
+    const pts=series(id,m.k);
+    h+=`<section class="blk"><div class="bh"><h2>${m.label}</h2><p>${m.k==='w'?'schwerster Satz':m.k==='best'?'bester Satz':'Summe'} pro Einheit</p></div>${pts.length>1?chartSvg(ex,pts,m,scan.marks):'<p class="empty">Ab der zweiten Einheit erscheint hier eine Kurve.</p>'}</section>`;
+  }
+  if(k==='wv'&&maxW>0&&scan.front.length){
+    const fr=[...scan.front].sort((a,b)=>b.w-a.w).slice(0,6);
+    h+=`<section class="blk"><div class="bh"><h2>Bestwerte</h2><p>meiste ${ex.unit==='sec'?'Sekunden':'Wdh'} je Gewicht</p></div><ul class="rows">${fr.map(p=>`<li><span class="nm"><b>${p.w?fmtN(p.w)+' kg':'Ohne Gewicht'}</b><small>${dfmt(p.date)}</small></span><span class="val">${fmtN(p.v)} ${U}</span></li>`).join('')}</ul></section>`;
+  }
+  h+=`<section class="blk"><div class="bh"><h2>Einheiten</h2><p>${hist.length} insgesamt</p></div><ul class="rows">${[...hist].reverse().slice(0,60).map(s=>{const d=getDay(s.day);return `<li><span class="nm"><b>${dfmt(s.date)}</b><small>${esc(d?d.name:s.day)}</small></span><span class="val">${esc(fmtSets(s.sets[id],ex))}</span>${scan.marks.has(s)?'<span class="chip">PR</span>':''}</li>`}).join('')}</ul></section>`;
+  return h;
+}
+
 function render(){
   if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&document.activeElement.closest('#main')){needs=true;return}
   needs=false;
-  const r=route();
-  $('#tWeek').classList.toggle('on',r.v==='day');$('#tHist').classList.toggle('on',r.v==='hist');$('#tMore').classList.toggle('on',r.v==='more');
-  $('#main').innerHTML=r.v==='hist'?histView():r.v==='more'?moreView():dayView(r.d);
+  const r=route();computePRs();CH=null;
+  $('#tWeek').classList.toggle('on',r.v==='day');$('#tHist').classList.toggle('on',r.v==='hist'||r.v==='ex');$('#tMore').classList.toggle('on',r.v==='more');
+  $('#main').innerHTML=r.v==='hist'?histView():r.v==='more'?moreView():r.v==='ex'?exDetail(r.id):dayView(r.d);
+  bindChart();
 }
 function strip(sel){
   const m=monday(),ti=dayIdx(new Date());
@@ -263,7 +443,7 @@ function dayView(id){
   return h;
 }
 function exView(ex,b,bi,ei,s){
-  const tag=b.kind==='single'?String(ei+1):b.label+(ei+1),last=lastFor(ex.id),arr=(s&&s.sets[ex.id])||[];
+  const tag=b.kind==='single'?String(ei+1):b.label+(ei+1),last=lastFor(ex.id),arr=(s&&s.sets[ex.id])||[],prs=prOf(s,ex.id),pi=prs.reduce((a,f,i)=>f?i:a,-1);
   const up=last&&ex.unit!=='check'&&last.filter(x=>x&&x.ok).length>=ex.sets&&last.slice(0,ex.sets).every(x=>x&&x.ok&&+x.v>=ex.max);
   let rows='';
   for(let i=0;i<ex.sets;i++){
@@ -271,11 +451,11 @@ function exView(ex,b,bi,ei,s){
     const pv=lx.v||(ex.unit==='check'?'':ex.max),pw=lx.w||'';
     const ld=ex.load?`<label>${ex.load}<input id="i-${esc(ex.id)}-${i}-w" inputmode="decimal" data-f="w" data-e="${esc(ex.id)}" data-i="${i}" value="${esc(x.w)}" placeholder="${esc(pw||'0')}" aria-label="${ex.load} Satz ${i+1}"></label>`:'<span class="sp"></span>';
     const vl=ex.unit!=='check'?`<label><input id="i-${esc(ex.id)}-${i}-v" inputmode="numeric" data-f="v" data-e="${esc(ex.id)}" data-i="${i}" value="${esc(x.v)}" placeholder="${esc(pv)}" aria-label="${UNIT[ex.unit]} Satz ${i+1}">${UNIT[ex.unit]}</label>`:'<span class="sp"></span>';
-    rows+=`<div class="set ${x.ok?'ok':''}"><span class="no">${i+1}</span>${ex.load?ld:vl}${ex.load?vl:'<span class="sp"></span>'}<button class="chk" type="button" data-a="chk" data-e="${esc(ex.id)}" data-i="${i}" data-b="${bi}" aria-pressed="${!!x.ok}" aria-label="Satz ${i+1} erledigt">✓</button></div>`;
+    rows+=`<div class="set ${x.ok?'ok':''} ${prs[i]?'pr':''}"><span class="no">${prs[i]?'PR':i+1}</span>${ex.load?ld:vl}${ex.load?vl:'<span class="sp"></span>'}<button class="chk" type="button" data-a="chk" data-e="${esc(ex.id)}" data-i="${i}" data-b="${bi}" aria-pressed="${!!x.ok}" aria-label="Satz ${i+1} erledigt">✓</button></div>`;
   }
-  return `<article class="ex" style="--c:var(--k-${esc(ex.cat)})"><div class="exh"><span class="tag">${esc(tag)}</span><h3>${esc(ex.name)}</h3>${edit?`<button class="ed" data-a="exedit" data-b="${bi}" data-x="${ei}" type="button">Ändern</button>`:''}</div>
+  return `<article class="ex" style="--c:var(--k-${esc(ex.cat)})"><div class="exh"><span class="tag">${esc(tag)}</span><h3><a class="exl" href="#x-${esc(ex.id)}">${esc(ex.name)}</a></h3>${edit?`<button class="ed" data-a="exedit" data-b="${bi}" data-x="${ei}" type="button">Ändern</button>`:''}</div>
   <p class="tgt">${esc(target(ex))}${ex.eq?` <i>· ${esc(ex.eq)}</i>`:''}</p>${ex.note?`<p class="note">${esc(ex.note)}</p>`:''}
-  <p class="last">${last?'Letztes Mal: <b>'+esc(fmtSets(last,ex))+'</b>':'<span class="note">Noch kein Eintrag</span>'}</p>${up?`<span class="up">Alle Sätze oben – ${ex.load?'mehr Gewicht':'schwerere Variante'}</span>`:''}
+  <p class="last">${last?'Letztes Mal: <b>'+esc(fmtSets(last,ex))+'</b>':'<span class="note">Noch kein Eintrag</span>'}</p>${up?`<span class="up">Alle Sätze oben – ${ex.load?'mehr Gewicht':'schwerere Variante'}</span>`:''}${pi>=0?`<span class="up pr">Rekord · ${esc(prText(ex,arr[pi]))}</span>`:''}
   <div class="sets">${rows}</div></article>`;
 }
 function restView(s){
@@ -295,11 +475,11 @@ function histView(){
     const d=getDay(s.day),ents=Object.entries(s.sets||{}).filter(([,a])=>a.some(x=>x&&x.ok));
     const find=id=>{for(const dd of plan.days)for(const b of dd.blocks)for(const ex of b.ex)if(ex.id===id)return ex;return{unit:'reps',load:'',name:id}};
     const dt=new Date(s.date+'T12:00:00');
-    const sum=s.day==='so'?'Wochen-Check':ents.reduce((a,[,x])=>a+x.filter(z=>z&&z.ok).length,0)+' Sätze';
+    const sum=s.day==='so'?'Wochen-Check':ents.reduce((a,[,x])=>a+x.filter(z=>z&&z.ok).length,0)+' Sätze'+(prCount(s)?' · '+prCount(s)+' PR':'');
     return `<details class="ses"><summary><b>${esc(d?d.name:s.day)}</b><span>${DN[DAYS[dayIdx(dt)]]} ${dt.getDate()}.${dt.getMonth()+1}. · ${esc(sum)}</span></summary><ul>${s.day==='so'?CHECKQ.map(([k,l])=>`<li>${l}<span>${esc(s.week[k]||'–')}/5</span></li>`).join('')+(s.week.note?`<li>${esc(s.week.note)}</li>`:''):ents.map(([id,a])=>{const ex=find(id);return `<li>${esc((s.n&&s.n[id])||ex.name)}<span>${esc(fmtSets(a,ex))}</span></li>`}).join('')}</ul></details>`}).join('');
   return `<div class="hero" style="grid-template-columns:1fr"><div><p class="k">Letzte 12 Wochen</p><h1>Verlauf</h1></div></div>
-  <div class="stats"><div><b>${thisW}</b><span>Einheiten diese Woche</span></div><div><b>${last4}</b><span>Einheiten in 4 Wochen</span></div><div><b>${setsTot}</b><span>Sätze gesamt</span></div></div>
-  <div class="grid" aria-label="Trainingskalender">${g}</div>
+  <div class="stats"><div><b>${thisW}</b><span>Einheiten diese Woche</span></div><div><b>${last4}</b><span>Einheiten in 4 Wochen</span></div><div><b>${setsTot}</b><span>Sätze gesamt</span></div><div><b>${all.filter(s=>s.date>=ds(m4)).reduce((a,s)=>a+prCount(s),0)}</b><span>Rekorde in 4 Wochen</span></div></div>
+  <div class="grid" aria-label="Trainingskalender">${g}</div>${exList()}
   <section class="blk"><div class="bh"><h2>Einheiten</h2><p>Antippen für Details</p></div>${list||'<p class="empty">Noch nichts eingetragen. Hake im Wochenplan deinen ersten Satz ab, dann erscheint er hier.</p>'}</section>`;
 }
 function moreView(){
@@ -363,7 +543,11 @@ $('#main').addEventListener('click',e=>{
     if(x.ok){x.t=Date.now();const lx=(lastFor(ex.id)||[])[i]||{};if(!x.v&&ex.unit!=='check')x.v=String(lx.v||ex.max);if(!x.w&&ex.load&&lx.w)x.w=lx.w;s.n[ex.id]=ex.name;
       startT(ex.rest||d.blocks[t.dataset.b].rest)}
     arr[i]=x;save(key(r.d));render();
+    if(x.ok){computePRs();const f=prOf(s,ex.id)[i];if(f){toast(f==='w'?'Neues Höchstgewicht':'Neuer Rekord',ex.name+' · '+prText(ex,x));try{navigator.vibrate&&navigator.vibrate([40,60,40,60,120])}catch(er){}}}
   }
+  if(a==='back'){if(prevHash!==null)history.back();else location.hash='verlauf'}
+  if(a==='metric'){exM[r.id]=t.dataset.m;render()}
+  if(a==='exall'){allEx=!allEx;render()}
   if(a==='health'){
     const s=ensure(r.d),ts=Object.values(s.sets).flat().filter(x=>x&&x.ok&&x.t).map(x=>x.t),now=Date.now();
     const warm=d.warm&&d.warm.length?(d.type==='athletik'?10:d.warm.length>5?8:5):0;
@@ -406,7 +590,11 @@ $('#form').addEventListener('submit',e=>{
   if(ei>=0)b.ex[ei]=ex;else b.ex.push(ex);save('plan');closeSheet();render();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing)closeSheet()});
-addEventListener('hashchange',()=>{edit=false;render();scrollTo(0,0)});
+addEventListener('hashchange',e=>{
+  const o=new URL(e.oldURL).hash,n=location.hash;pos[o]=scrollY;prevHash=o;edit=false;render();
+  scrollTo(0,o.startsWith('#x-')&&!n.startsWith('#x-')&&pos[n]!=null?pos[n]:0); /* back from a chart keeps your place */
+});
+addEventListener('resize',()=>{if(route().v==='ex'){clearTimeout(rzT);rzT=setTimeout(render,150)}});
 
 /* storage */
 render();
