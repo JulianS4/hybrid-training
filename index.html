@@ -159,6 +159,9 @@ details.ses li span{color:var(--mut);text-align:right;font-variant-numeric:tabul
 .rows .chev{color:var(--mut);font-size:22px;line-height:1}
 .chip{flex:none;background:var(--acc);color:#fff;font:800 11px Archivo,sans-serif;letter-spacing:.03em;border-radius:6px;padding:3px 6px}
 .spark{flex:none}
+.move{margin-top:12px;padding:14px;border-radius:16px;background:var(--acc2)}
+.move p{margin:0;font-size:15px}
+.move b{color:var(--acc)}
 .dsel{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 0 0 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--mut);font-size:14px}
 .dsel select{appearance:none;-webkit-appearance:none;border:0;background:none;color:var(--ink);font:600 16px Archivo,sans-serif;min-height:42px;padding:0 34px 0 0;cursor:pointer}
 .dsel::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;margin-top:-6px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);pointer-events:none}
@@ -183,6 +186,7 @@ details.ses li span{color:var(--mut);text-align:right;font-variant-numeric:tabul
     <nav class="tabs"><a href="#" id="tWeek">Woche</a><a href="#verlauf" id="tHist">Verlauf</a><a href="#mehr" id="tMore">Mehr</a></nav>
   </header>
   <p class="status" id="status">Lädt…</p>
+  <div class="move" role="note"><p><b>Diese App zieht um nach KI-Apps.</b> 1. Backup speichern · 2. In KI-Apps unter Einstellungen laden.</p><div class="tools"><button class="btn pri" id="mvExport" type="button">Backup speichern</button><a class="btn" href="https://julians4.github.io/ki-apps/" style="display:inline-flex;align-items:center;text-decoration:none">KI-Apps öffnen</a></div></div>
   <main id="main"></main>
 </div>
 <div id="bar"><div class="in"><div class="t" id="barT"><small>Pause</small>0:00</div><button class="btn" id="bPlus" type="button">+15 s</button><button class="btn" id="bSkip" type="button">Weiter</button></div></div>
@@ -538,6 +542,13 @@ function stopT(){clearInterval(tInt);clearTimeout(tInt);$('#bar').className=''}
 $('#bPlus').addEventListener('click',()=>{if($('#bar').classList.contains('end')){startT(15);return}tEnd+=15000;tick()});
 $('#bSkip').addEventListener('click',stopT);
 
+/* backup download, also used by the move-to-KI-Apps banner */
+function exportBackup(){
+  const data=JSON.stringify({app:'hybrid-training',v:1,exported:new Date().toISOString(),plan,sess});
+  try{const u=URL.createObjectURL(new Blob([data],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download=`training-backup-${today()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(er){}
+}
+$('#mvExport').addEventListener('click',e=>{exportBackup();e.target.textContent='Backup gespeichert ✓'});
+
 /* events */
 const findEx=(d,id)=>{for(const b of d.blocks)for(const ex of b.ex)if(ex.id===id)return{ex,b};return{}};
 $('#main').addEventListener('input',e=>{
@@ -583,11 +594,7 @@ $('#main').addEventListener('click',e=>{
     s.health=`${mins} min · ${st.slice(11)} Uhr`;save();render();
     location.href=`shortcuts://run-shortcut?name=${encodeURIComponent(SC_NAME)}&input=text&text=${encodeURIComponent(body)}`;
   }
-  if(a==='export'){
-    const data=JSON.stringify({app:'hybrid-training',v:1,exported:new Date().toISOString(),plan,sess});
-    try{const u=URL.createObjectURL(new Blob([data],{type:'application/json'})),l=document.createElement('a');l.href=u;l.download=`training-backup-${today()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}catch(er){}
-    t.textContent='Backup erstellt ✓';
-  }
+  if(a==='export'){exportBackup();t.textContent='Backup erstellt ✓'}
   if(a==='edit'){edit=!edit;render()}
   if(a==='scale'){const s=ensure(r.d);s.week=Object.assign({},s.week,{[t.dataset.k]:+t.dataset.n});save(key(r.d));render()}
   if(a==='exedit')openSheet(r.d,+t.dataset.b,+t.dataset.x);
